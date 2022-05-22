@@ -1,4 +1,3 @@
-//jshint esversion:6
 require("dotenv").config()
 const express = require("express")
 const bodyParser = require("body-parser")
@@ -30,6 +29,7 @@ const userSchema = new mongoose.Schema({
         type: String
     }
 })
+
 userSchema.plugin(passportLocalMongoose)
 
 const User = new mongoose.model("User",userSchema)
@@ -37,6 +37,8 @@ const User = new mongoose.model("User",userSchema)
 passport.use(User.createStrategy())
 passport.serializeUser(User.serializeUser())
 passport.deserializeUser(User.deserializeUser())
+
+//  GET requests
 app.get("/",function (req,res) {
     res.render("home")
 })
@@ -50,15 +52,22 @@ app.get("/register",function (req,res) {
 })
 
 app.get("/secrets", function (req,res) {
-    if (req.isAuthenticated()) {
+    if (req.isAuthenticated()) { //Verifies if the user is autenticated
         res.render("secrets")
     }else{
         res.redirect("/login")
     }
 })
 
+app.get("/logout", function (req,res) {
+    // Logs Out the user
+    req.logout()
+    res.redirect("/")
+})
 
+// POST requests
 app.post("/register",function (req,res) {
+    //Registers the user, add user credentials in database and sends an authentication cookie
     User.register({username:req.body.username},req.body.password, function (err,user) {
         if (err){
             console.log(err)
@@ -72,8 +81,8 @@ app.post("/register",function (req,res) {
     })
 })
 
-
 app.post("/login",function (req,res) {
+    // Uses to user given credentials to authenticate 
     const newUser = new User({
             username: req.body.username,
             password: req.body.password
@@ -90,13 +99,7 @@ app.post("/login",function (req,res) {
     
 })
 
-
-app.get("/logout", function (req,res) {
-    req.logout()
-    res.redirect("/")
-})
-
-
+// Listens on port 3000
 app.listen(3000,function() {
     console.log("Listening at Port 3000....")
 })
